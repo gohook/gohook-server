@@ -1,28 +1,40 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/go-kit/kit/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/gohook/gohook-server/gohookd"
+	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/pb"
+)
 
-	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
+const (
+	port = "PORT"
 )
 
 func main() {
-	var (
-		grpcAddr = flag.String("addr", ":8080", "gRPC (HTTP) listen address")
-	)
+	port := os.Getenv(port)
+	// default for port
+	if port == "" {
+		port = "8080"
+	}
 
-	flag.Parse()
+	// Setup Store
+	store := inmem.NewInMemHooks()
+
+	// Context
+	ctx := context.Background()
+
+	// Error chan
+	errc := make(chan error)
 
 	// Logging domain.
 	var logger log.Logger
@@ -31,55 +43,29 @@ func main() {
 		logger = log.NewContext(logger).With("ts", log.DefaultTimestampUTC)
 		logger = log.NewContext(logger).With("caller", log.DefaultCaller)
 	}
-	logger.Log("msg", "Gohookd Started")
-	defer logger.Log("msg", "Gohookd Quit")
 
-	// Business domain.
-	var service Service
-	{
-		service = NewBasicService()
-		service = ServiceLoggingMiddleware(logger)(service)
-	}
-
-	// Endpoint domain.
-	var sumEndpoint endpoint.Endpoint
-	{
-		sumLogger := log.NewContext(logger).With("method", "Sum")
-		sumEndpoint = MakeSumEndpoint(service)
-		sumEndpoint = EndpointLoggingMiddleware(sumLogger)(sumEndpoint)
-	}
-
-	endpoints := Endpoints{
-		SumEndpoint: sumEndpoint,
-	}
-
-	// Mechanical domain.
-	errc := make(chan error)
-	ctx := context.Background()
-
-	// Interrupt handler.
+	// Interrupt handler
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		errc <- fmt.Errorf("%s", <-c)
 	}()
 
-	// gRPC transport.
+	// gRPC transport
 	go func() {
-		logger := log.NewContext(logger).With("transport", "gRPC")
-
-		ln, err := net.Listen("tcp", *grpcAddr)
+		lis, err := net.Listen("tcp", ":"+port)
 		if err != nil {
 			errc <- err
 			return
 		}
+		defer lis.Close()
 
-		srv := MakeGRPCServer(ctx, endpoints, logger)
 		s := grpc.NewServer()
-		pb.RegisterAddServer(s, srv)
+		gohook := gohookd.NewGohookdGRPCServer(ctx, store, logger)
+		pb.RegisterGohookServer(s, gohook)
 
-		logger.Log("addr", *grpcAddr)
-		errc <- s.Serve(ln)
+		logger.Log("msg", "GRPC Server Started", "port", port)
+		errc <- s.Serve(lis)
 	}()
 
 	logger.Log("exit", <-errc)

@@ -54,10 +54,3 @@ func NewGohookdGRPCServer(ctx context.Context, store HookStore, queue HookQueue,
 	logger = log.NewContext(logger).With("transport", "gRPC")
 	return MakeGRPCServer(ctx, endpoints, logger)
 }
-
-type HookStore interface {
-	Add(hook *Hook) error
-	Remove(hookId HookID) (*Hook, error)
-	Find(hookId HookID) (*Hook, error)
-	FindAll() (HookList, error)
-}

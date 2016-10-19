@@ -1,0 +1,20 @@
+package: github.com/gohook/gohook-server
+import:
+- package: github.com/go-kit/kit
+  version: ~0.2.0
+  subpackages:
+  - circuitbreaker
+  - endpoint
+  - log
+  - transport/grpc
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+- package: github.com/satori/go.uuid
+  version: ~1.1.0
+- package: github.com/sony/gobreaker
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: google.golang.org/grpc
+  version: ~1.0.3

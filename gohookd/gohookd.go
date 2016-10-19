@@ -6,11 +6,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-func NewGohookdGRPCServer(ctx context.Context, store HookStore, logger log.Logger) *GohookdServer {
+func NewGohookdGRPCServer(ctx context.Context, store HookStore, queue HookQueue, logger log.Logger) *GohookdServer {
 	// Business domain.
 	var service Service
 	{
-		service = NewBasicService(store)
+		service = NewBasicService(store, queue)
 		service = ServiceLoggingMiddleware(logger)(service)
 	}
 

@@ -30,6 +30,9 @@ func main() {
 	// Setup Store
 	store := inmem.NewInMemHooks()
 
+	// Setup Queue
+	queue := inmem.NewInMemQueue()
+
 	// Context
 	ctx := context.Background()
 
@@ -61,7 +64,7 @@ func main() {
 		defer lis.Close()
 
 		s := grpc.NewServer()
-		gohook := gohookd.NewGohookdGRPCServer(ctx, store, logger)
+		gohook := gohookd.NewGohookdGRPCServer(ctx, store, queue, logger)
 		pb.RegisterGohookServer(s, gohook)
 
 		logger.Log("msg", "GRPC Server Started", "port", port)

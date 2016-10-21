@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package pb;
+
+// Define the Gohook service calls that are available.
+service Gohook {
+  // Tunnel initiates an open connection between the client and server.
+  // This is used to stream data from the server to the client when
+  // specific events happen that the client needs to know about. This
+  // includes when one of the webhook ids is hit so the client can
+  // execute the script paired with that hook id.
+  rpc Tunnel(TunnelRequest) returns (stream TunnelResponse) {}
+
+  // List returns all of the webhooks that are tied to this client.
+  // This allows the client to stay synced with the webhooks that are
+  // enabled and ones that have been removed.
+  rpc List(ListRequest) returns (ListResponse) {}
+
+  // Create sets up a new webhook on the server.
+  // This is used to tell the server to set up a webhook and inform
+  // us over the tunnel stream when that webhook it hit.
+  rpc Create(CreateRequest) returns (CreateResponse) {}
+
+  // Delete removes a webhook from the server for this client.
+  // This allows the client to unsubscribe when it no longer cares about
+  // the restults of a webhook getting hit.
+  rpc Delete(DeleteRequest) returns (DeleteResponse) {}
+}
+
+// Method defines the available http methods for setting up a webhook.
+enum Method {
+  UNKNOWN = 0;
+  GET = 1;
+  POST = 2;
+  PUT = 3;
+  PATCH = 4;
+  DELETE = 5;
+}
+
+// Hook defines the response of a webhook when received from the server.
+message Hook {
+  string id = 1;
+  string url = 2;
+  Method method = 3;
+}
+
+// HookRequest defines the request format when setting up a new webhook on the server.
+message HookRequest {
+  // Only a method is required when setting up a new webhook. The server
+  // will set the id and return that in the response.
+  Method method = 1;
+}
+
+// HookCall defines the message format when receiving a hook from the tunnel.
+message HookCall {
+  string id = 1;
+  Method method = 2;
+  bytes body = 3;
+}
+
+message TunnelRequest {}
+
+message TunnelResponse {
+  oneof event {
+    HookCall hook = 1;
+  }
+}
+
+message ListRequest {}
+
+message ListResponse {
+  repeated Hook hooks = 1;
+}
+
+message CreateRequest {
+  HookRequest hook = 1;
+}
+
+message CreateResponse {
+  Hook hook = 1;
+}
+
+message DeleteRequest {
+  string id = 1;
+}
+
+message DeleteResponse {
+  Hook hook = 1;
+}

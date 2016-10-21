@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/gohook/gohook-server/gohookd"
-	"github.com/gohook/pb"
+	"github.com/gohook/gohook-server/pb"
 
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"

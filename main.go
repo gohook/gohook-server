@@ -14,7 +14,7 @@ import (
 
 	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/inmem"
-	"github.com/gohook/pb"
+	"github.com/gohook/gohook-server/pb"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"golang.org/x/net/context"
 
-	"github.com/gohook/pb"
+	"github.com/gohook/gohook-server/pb"
 
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"

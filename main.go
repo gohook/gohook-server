@@ -15,11 +15,17 @@ import (
 	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/gohook-server/pb"
+	"github.com/gohook/gohook-server/tunnel"
 )
 
 const (
 	port = "PORT"
 )
+
+type GohookGRPCServer struct {
+	*gohookd.GohookdServer
+	*tunnel.GohookTunnelServer
+}
 
 func main() {
 	port := os.Getenv(port)
@@ -102,8 +108,18 @@ func main() {
 		s := grpc.NewServer()
 
 		// Mechanical domain.
-		logger := log.NewContext(logger).With("transport", "gRPC")
-		gohook := gohookd.MakeGRPCServer(ctx, endpoints, logger)
+		var gohook pb.GohookServer
+		{
+			logger := log.NewContext(logger).With("transport", "gRPC")
+			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
+			t := tunnel.MakeTunnelServer()
+
+			gohook = &GohookGRPCServer{
+				GohookTunnelServer: t,
+				GohookdServer:      g,
+			}
+		}
+
 		pb.RegisterGohookServer(s, gohook)
 
 		logger.Log("msg", "GRPC Server Started", "port", port)

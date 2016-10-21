@@ -2,7 +2,9 @@ package gohookd
 
 import (
 	"errors"
+	"fmt"
 	"golang.org/x/net/context"
+	"time"
 
 	"github.com/gohook/gohook-server/pb"
 
@@ -47,7 +49,24 @@ func MakeGRPCServer(ctx context.Context, endpoints Endpoints, logger log.Logger)
 
 // Tunnel transport handler
 func (s *GohookdServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_TunnelServer) error {
-	return errors.New("Not Implimented. Use other tunnel method.")
+	// pass the stream and request data down to the service?
+	// that way we can handle the logic there... but... then we are mixing transport and
+	// business logic...
+	// is there some way we can expose an interface to the service?
+	for {
+		err := stream.Send(&pb.TunnelResponse{
+			Event: &pb.TunnelResponse_Hook{
+				Hook: &pb.HookCall{
+					Id: "Hello, World",
+				},
+			},
+		})
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		time.Sleep(1 * time.Second)
+	}
 }
 
 // List transport handler

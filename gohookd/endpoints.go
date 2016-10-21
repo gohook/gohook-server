@@ -9,26 +9,9 @@ import (
 )
 
 type Endpoints struct {
-	TunnelEndpoint endpoint.Endpoint
 	ListEndpoint   endpoint.Endpoint
 	CreateEndpoint endpoint.Endpoint
 	DeleteEndpoint endpoint.Endpoint
-}
-
-// Tunnel Endpoint
-type tunnelRequest struct{}
-type tunnelResponse struct{}
-
-func (e Endpoints) Tunnel(ctx context.Context) error {
-	_, err := e.TunnelEndpoint(ctx, tunnelRequest{})
-	return err
-}
-
-func MakeTunnelEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, _ interface{}) (response interface{}, err error) {
-		err = s.Tunnel(ctx)
-		return tunnelResponse{}, err
-	}
 }
 
 // List Endpoint

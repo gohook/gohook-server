@@ -46,7 +46,7 @@ func MakeGRPCServer(ctx context.Context, endpoints Endpoints, logger log.Logger)
 }
 
 // Tunnel transport handler
-func (s *GohookdServer) Tunnel(req *pb.TunnelRequest, _ pb.Gohook_TunnelServer) error {
+func (s *GohookdServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_TunnelServer) error {
 	return errors.New("Not Implimented. Use other tunnel method.")
 }
 
@@ -75,27 +75,6 @@ func (s *GohookdServer) Delete(ctx context.Context, req *pb.DeleteRequest) (*pb.
 		return nil, err
 	}
 	return rep.(*pb.DeleteResponse), nil
-}
-
-// Tunnel transforms
-func EncodeGRPCTunnelRequest(_ context.Context, request interface{}) (interface{}, error) {
-	_ = request.(tunnelRequest)
-	return &pb.TunnelRequest{}, nil
-}
-
-func DecodeGRPCTunnelRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	_ = grpcReq.(*pb.TunnelRequest)
-	return tunnelRequest{}, nil
-}
-
-func DecodeGRPCTunnelResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	_ = grpcReply.(*pb.TunnelResponse)
-	return tunnelResponse{}, nil
-}
-
-func EncodeGRPCTunnelResponse(_ context.Context, response interface{}) (interface{}, error) {
-	_ = response.(tunnelResponse)
-	return &pb.TunnelResponse{}, nil
 }
 
 // List transforms

@@ -17,22 +17,6 @@ import (
 
 func New(conn *grpc.ClientConn, logger log.Logger) gohookd.Service {
 
-	var tunnelEndpoint endpoint.Endpoint
-	{
-		tunnelEndpoint = grpctransport.NewClient(
-			conn,
-			"Gohook",
-			"Tunnel",
-			gohookd.EncodeGRPCTunnelRequest,
-			gohookd.DecodeGRPCTunnelResponse,
-			pb.TunnelResponse{},
-		).Endpoint()
-		tunnelEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Tunnel",
-			Timeout: 30 * time.Second,
-		}))(tunnelEndpoint)
-	}
-
 	var listEndpoint endpoint.Endpoint
 	{
 		listEndpoint = grpctransport.NewClient(
@@ -82,7 +66,6 @@ func New(conn *grpc.ClientConn, logger log.Logger) gohookd.Service {
 	}
 
 	return gohookd.Endpoints{
-		TunnelEndpoint: tunnelEndpoint,
 		ListEndpoint:   listEndpoint,
 		CreateEndpoint: createEndpoint,
 		DeleteEndpoint: deleteEndpoint,

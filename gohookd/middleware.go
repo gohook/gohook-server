@@ -36,18 +36,6 @@ type serviceLoggingMiddleware struct {
 	next   Service
 }
 
-func (mw serviceLoggingMiddleware) Tunnel(ctx context.Context) (err error) {
-	defer func(begin time.Time) {
-		mw.logger.Log(
-			"method", "Tunnel",
-			"layer", "service",
-			"error", err,
-			"took", time.Since(begin),
-		)
-	}(time.Now())
-	return mw.next.Tunnel(ctx)
-}
-
 func (mw serviceLoggingMiddleware) List(ctx context.Context) (v HookList, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Log(

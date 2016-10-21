@@ -56,13 +56,6 @@ func main() {
 	}
 
 	// Endpoint domain.
-	var tunnelEndpoint endpoint.Endpoint
-	{
-		tunnelLogger := log.NewContext(logger).With("method", "Tunnel")
-		tunnelEndpoint = gohookd.MakeTunnelEndpoint(service)
-		tunnelEndpoint = gohookd.EndpointLoggingMiddleware(tunnelLogger)(tunnelEndpoint)
-	}
-
 	var listEndpoint endpoint.Endpoint
 	{
 		listLogger := log.NewContext(logger).With("method", "List")
@@ -85,7 +78,6 @@ func main() {
 	}
 
 	endpoints := gohookd.Endpoints{
-		TunnelEndpoint: tunnelEndpoint,
 		ListEndpoint:   listEndpoint,
 		CreateEndpoint: createEndpoint,
 		DeleteEndpoint: deleteEndpoint,

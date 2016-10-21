@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -47,6 +48,49 @@ func main() {
 		logger = log.NewContext(logger).With("caller", log.DefaultCaller)
 	}
 
+	// Business domain.
+	var service gohookd.Service
+	{
+		service = gohookd.NewBasicService(store, queue)
+		service = gohookd.ServiceLoggingMiddleware(logger)(service)
+	}
+
+	// Endpoint domain.
+	var tunnelEndpoint endpoint.Endpoint
+	{
+		tunnelLogger := log.NewContext(logger).With("method", "Tunnel")
+		tunnelEndpoint = gohookd.MakeTunnelEndpoint(service)
+		tunnelEndpoint = gohookd.EndpointLoggingMiddleware(tunnelLogger)(tunnelEndpoint)
+	}
+
+	var listEndpoint endpoint.Endpoint
+	{
+		listLogger := log.NewContext(logger).With("method", "List")
+		listEndpoint = gohookd.MakeListEndpoint(service)
+		listEndpoint = gohookd.EndpointLoggingMiddleware(listLogger)(listEndpoint)
+	}
+
+	var createEndpoint endpoint.Endpoint
+	{
+		createLogger := log.NewContext(logger).With("method", "Create")
+		createEndpoint = gohookd.MakeCreateEndpoint(service)
+		createEndpoint = gohookd.EndpointLoggingMiddleware(createLogger)(createEndpoint)
+	}
+
+	var deleteEndpoint endpoint.Endpoint
+	{
+		deleteLogger := log.NewContext(logger).With("method", "Delete")
+		deleteEndpoint = gohookd.MakeDeleteEndpoint(service)
+		deleteEndpoint = gohookd.EndpointLoggingMiddleware(deleteLogger)(deleteEndpoint)
+	}
+
+	endpoints := gohookd.Endpoints{
+		TunnelEndpoint: tunnelEndpoint,
+		ListEndpoint:   listEndpoint,
+		CreateEndpoint: createEndpoint,
+		DeleteEndpoint: deleteEndpoint,
+	}
+
 	// Interrupt handler
 	go func() {
 		c := make(chan os.Signal, 1)
@@ -64,7 +108,10 @@ func main() {
 		defer lis.Close()
 
 		s := grpc.NewServer()
-		gohook := gohookd.NewGohookdGRPCServer(ctx, store, queue, logger)
+
+		// Mechanical domain.
+		logger := log.NewContext(logger).With("transport", "gRPC")
+		gohook := gohookd.MakeGRPCServer(ctx, endpoints, logger)
 		pb.RegisterGohookServer(s, gohook)
 
 		logger.Log("msg", "GRPC Server Started", "port", port)

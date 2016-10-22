@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"time"
 
 	"github.com/sony/gobreaker"
@@ -15,7 +16,16 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
-func New(conn *grpc.ClientConn, logger log.Logger) gohookd.Service {
+type GohookClient struct {
+	pbClient pb.GohookClient
+	gohookd.Service
+}
+
+func (c *GohookClient) Tunnel(ctx context.Context, req *pb.TunnelRequest, opts ...grpc.CallOption) (pb.Gohook_TunnelClient, error) {
+	return c.pbClient.Tunnel(ctx, req, opts...)
+}
+
+func New(conn *grpc.ClientConn, logger log.Logger) GohookClient {
 
 	var listEndpoint endpoint.Endpoint
 	{
@@ -65,9 +75,12 @@ func New(conn *grpc.ClientConn, logger log.Logger) gohookd.Service {
 		}))(deleteEndpoint)
 	}
 
-	return gohookd.Endpoints{
-		ListEndpoint:   listEndpoint,
-		CreateEndpoint: createEndpoint,
-		DeleteEndpoint: deleteEndpoint,
+	return GohookClient{
+		pbClient: pb.NewGohookClient(conn),
+		Service: gohookd.Endpoints{
+			ListEndpoint:   listEndpoint,
+			CreateEndpoint: createEndpoint,
+			DeleteEndpoint: deleteEndpoint,
+		},
 	}
 }

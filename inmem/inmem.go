@@ -40,8 +40,8 @@ func (i InMemQueue) Broadcast(m gohookd.QueueMessage) error {
 	return nil
 }
 
-func (i InMemQueue) Listen() gohookd.ReceiveC {
-	return i.receivec
+func (i InMemQueue) Listen() (gohookd.ReceiveC, error) {
+	return i.receivec, nil
 }
 
 type InMemHooks struct {

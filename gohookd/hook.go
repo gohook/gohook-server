@@ -45,5 +45,5 @@ type ReceiveC chan QueueMessage
 
 type HookQueue interface {
 	Broadcast(message QueueMessage) error
-	Listen() ReceiveC
+	Listen() (ReceiveC, error)
 }

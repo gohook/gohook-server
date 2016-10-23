@@ -58,7 +58,9 @@ message HookCall {
   bytes body = 3;
 }
 
-message TunnelRequest {}
+message TunnelRequest {
+  string id = 1;
+}
 
 message TunnelResponse {
   oneof event {

@@ -1,5 +1,5 @@
 hash: 364d1e19190dd8df7c049a0cd4bcc9ded53e9ca1c8a79144dfd2b3ef1983f328
-updated: 2016-10-21T10:04:04.849501418-04:00
+updated: 2016-10-25T10:23:41.496993077-04:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -14,6 +14,7 @@ imports:
   - endpoint
   - log
   - transport/grpc
+  - transport/http
 - name: github.com/go-logfmt/logfmt
   version: d4327190ff838312623b09bfeb50d7c93c8d9c1d
 - name: github.com/go-stack/stack
@@ -36,6 +37,7 @@ imports:
   version: 697293012c1df3836225e65b04b16871ac5bf0bf
   subpackages:
   - context
+  - context/ctxhttp
   - http2
   - http2/hpack
   - idna

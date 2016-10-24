@@ -57,7 +57,7 @@ func main() {
 	// Business domain.
 	var service gohookd.Service
 	{
-		service = gohookd.NewBasicService(store, queue)
+		service = gohookd.NewBasicService(store)
 		service = gohookd.ServiceLoggingMiddleware(logger)(service)
 	}
 

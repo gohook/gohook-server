@@ -13,16 +13,14 @@ type Service interface {
 	Delete(ctx context.Context, id HookID) (*Hook, error)
 }
 
-func NewBasicService(store HookStore, queue HookQueue) Service {
+func NewBasicService(store HookStore) Service {
 	return &basicService{
 		hooks: store,
-		queue: queue,
 	}
 }
 
 type basicService struct {
 	hooks HookStore
-	queue HookQueue
 }
 
 func (s basicService) List(_ context.Context) (HookList, error) {

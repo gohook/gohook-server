@@ -6,7 +6,7 @@ import (
 )
 
 type Service interface {
-	Trigger(ctx context.Context, hookId string) (*WebhookStatus, error)
+	Trigger(ctx context.Context, trigger TriggerRequest) (*TriggerResponse, error)
 }
 
 func NewBasicService(store gohookd.HookStore, queue gohookd.HookQueue) Service {
@@ -21,12 +21,12 @@ type basicService struct {
 	queue gohookd.HookQueue
 }
 
-func (s basicService) Trigger(_ context.Context, hookId string) (*WebhookStatus, error) {
+func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*TriggerResponse, error) {
 	// + Check to see if this hookid exists
 	// If it does, check to see if there is a session associated with this user
 	// If there is, broadcast a struct containing the sessionid and the hook payload
 
-	hook, err := s.hooks.Find(gohookd.HookID(hookId))
+	hook, err := s.hooks.Find(trigger.HookId)
 	if err != nil {
 		return nil, err
 	}
@@ -35,5 +35,5 @@ func (s basicService) Trigger(_ context.Context, hookId string) (*WebhookStatus,
 	if err != nil {
 		return nil, err
 	}
-	return &WebhookStatus{200}, nil
+	return &TriggerResponse{200}, nil
 }

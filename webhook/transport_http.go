@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 )
@@ -52,7 +53,10 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 
 func DecodeHTTPTriggerRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	hookId := mux.Vars(r)["hookId"]
-	return triggerRequest{hookId}, nil
+	req := TriggerRequest{
+		HookId: gohookd.HookID(hookId),
+	}
+	return req, nil
 }
 
 func EncodeHTTPTriggerResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {

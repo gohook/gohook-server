@@ -36,15 +36,15 @@ type serviceLoggingMiddleware struct {
 	next   Service
 }
 
-func (mw serviceLoggingMiddleware) Trigger(ctx context.Context, hookId string) (v *WebhookStatus, err error) {
+func (mw serviceLoggingMiddleware) Trigger(ctx context.Context, trigger TriggerRequest) (v *TriggerResponse, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Log(
 			"method", "Trigger",
 			"layer", "service",
-			"hookId", hookId,
+			"hookId", trigger.HookId,
 			"error", err,
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return mw.next.Trigger(ctx, hookId)
+	return mw.next.Trigger(ctx, trigger)
 }

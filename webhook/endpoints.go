@@ -10,22 +10,14 @@ type Endpoints struct {
 }
 
 // Trigger Endpoint
-type triggerRequest struct {
-	hookId string `json:"hookId"`
-}
-
-func (e Endpoints) Trigger(ctx context.Context, hookId string) (*WebhookStatus, error) {
-	response, err := e.TriggerEndpoint(ctx, triggerRequest{hookId})
-	return response.(*WebhookStatus), err
+func (e Endpoints) Trigger(ctx context.Context, trigger TriggerRequest) (*TriggerResponse, error) {
+	response, err := e.TriggerEndpoint(ctx, trigger)
+	return response.(*TriggerResponse), err
 }
 
 func MakeTriggerEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (response interface{}, err error) {
-		request := req.(triggerRequest)
-		status, err := s.Trigger(ctx, request.hookId)
-		if err != nil {
-			return nil, err
-		}
-		return status, nil
+		request := req.(TriggerRequest)
+		return s.Trigger(ctx, request)
 	}
 }

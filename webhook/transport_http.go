@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-kit/kit/log"
@@ -53,8 +54,14 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 
 func DecodeHTTPTriggerRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	hookId := mux.Vars(r)["hookId"]
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
 	req := TriggerRequest{
 		HookId: gohookd.HookID(hookId),
+		Method: r.Method,
+		Body:   body,
 	}
 	return req, nil
 }

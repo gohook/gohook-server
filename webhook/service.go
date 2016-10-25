@@ -22,10 +22,16 @@ type basicService struct {
 }
 
 func (s basicService) Trigger(_ context.Context, hookId string) (*WebhookStatus, error) {
-	// Check to see if this hookid exists
+	// + Check to see if this hookid exists
 	// If it does, check to see if there is a session associated with this user
 	// If there is, broadcast a struct containing the sessionid and the hook payload
-	err := s.queue.Broadcast(hookId)
+
+	hook, err := s.hooks.Find(gohookd.HookID(hookId))
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.queue.Broadcast(string(hook.Id))
 	if err != nil {
 		return nil, err
 	}

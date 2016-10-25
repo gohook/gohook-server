@@ -1,5 +1,5 @@
-hash: 364d1e19190dd8df7c049a0cd4bcc9ded53e9ca1c8a79144dfd2b3ef1983f328
-updated: 2016-10-25T10:23:41.496993077-04:00
+hash: 92920dda44130245ffc76f070690bccaeeb9b0bb662d534fe9f9291162b9bd4c
+updated: 2016-10-25T10:27:38.067555078-04:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -23,6 +23,10 @@ imports:
   version: 87c000235d3d852c1628dc9490cd21ab36a7d69f
   subpackages:
   - proto
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/satori/go.uuid

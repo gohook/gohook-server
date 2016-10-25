@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 )
 
@@ -14,8 +15,8 @@ func MakeWebhookHTTPServer(ctx context.Context, endpoints Endpoints, logger log.
 		httptransport.ServerErrorEncoder(errorEncoder),
 		httptransport.ServerErrorLogger(logger),
 	}
-	m := http.NewServeMux()
-	m.Handle("/webhook", httptransport.NewServer(
+	m := mux.NewRouter()
+	m.Handle("/hook/{hookId}", httptransport.NewServer(
 		ctx,
 		endpoints.TriggerEndpoint,
 		DecodeHTTPTriggerRequest,

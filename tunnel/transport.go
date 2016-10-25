@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-type SessionID string
-
 type GohookTunnelServer struct {
 	// Queue for getting notified when hooks come in
 	queue HookQueue

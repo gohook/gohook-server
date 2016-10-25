@@ -51,7 +51,8 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 func DecodeHTTPTriggerRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	return triggerRequest{}, nil
+	hookId := mux.Vars(r)["hookId"]
+	return triggerRequest{hookId}, nil
 }
 
 func EncodeHTTPTriggerResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {

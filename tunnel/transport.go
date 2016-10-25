@@ -2,7 +2,6 @@ package tunnel
 
 import (
 	"github.com/go-kit/kit/log"
-	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/pb"
 	"time"
 )
@@ -11,7 +10,7 @@ type SessionID string
 
 type GohookTunnelServer struct {
 	// Queue for getting notified when hooks come in
-	queue gohookd.HookQueue
+	queue HookQueue
 
 	// Keeps a list of all the sessions and the session ids for sending to correct client
 	// NOTE: SessionID must be unique per instance, but trackable with the given user. Maybe
@@ -55,7 +54,9 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 			return nil
 		case <-tickChan:
 			// Case for testing. Use broadcast to trigger a message
-			err := s.queue.Broadcast("Hello")
+			err := s.queue.Broadcast(&QueueMessage{
+				SessionId: "hello",
+			})
 			if err != nil {
 				s.logger.Log("msg", "Failed to broadcast", "error", err)
 			}
@@ -64,7 +65,7 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 	}
 }
 
-func MakeTunnelServer(q gohookd.HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
+func MakeTunnelServer(q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
 	queuec, err := q.Listen()
 	if err != nil {
 		return nil, err
@@ -90,7 +91,7 @@ func MakeTunnelServer(q gohookd.HookQueue, logger log.Logger) (*GohookTunnelServ
 
 				logger.Log("msg", "Handling incoming messsage...", "message", msg)
 				server.SendToStream("myid", &pb.HookCall{
-					Id: msg.(string),
+					Id: msg.SessionId,
 				})
 			}
 

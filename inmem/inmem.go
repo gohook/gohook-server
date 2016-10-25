@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gohook/gohook-server/gohookd"
+	"github.com/gohook/gohook-server/tunnel"
 )
 
 /*
@@ -26,21 +27,21 @@ will go to the process that the client is connected to.
 */
 
 type InMemQueue struct {
-	receivec gohookd.ReceiveC
+	receivec tunnel.ReceiveC
 }
 
-func NewInMemQueue() gohookd.HookQueue {
+func NewInMemQueue() tunnel.HookQueue {
 	return InMemQueue{
-		receivec: make(gohookd.ReceiveC),
+		receivec: make(tunnel.ReceiveC),
 	}
 }
 
-func (i InMemQueue) Broadcast(m gohookd.QueueMessage) error {
+func (i InMemQueue) Broadcast(m *tunnel.QueueMessage) error {
 	i.receivec <- m
 	return nil
 }
 
-func (i InMemQueue) Listen() (gohookd.ReceiveC, error) {
+func (i InMemQueue) Listen() (tunnel.ReceiveC, error) {
 	return i.receivec, nil
 }
 

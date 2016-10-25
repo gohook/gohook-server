@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"github.com/gohook/gohook-server/gohookd"
+	"github.com/gohook/gohook-server/tunnel"
 	"golang.org/x/net/context"
 )
 
@@ -9,7 +10,7 @@ type Service interface {
 	Trigger(ctx context.Context, trigger TriggerRequest) (*TriggerResponse, error)
 }
 
-func NewBasicService(store gohookd.HookStore, queue gohookd.HookQueue) Service {
+func NewBasicService(store gohookd.HookStore, queue tunnel.HookQueue) Service {
 	return &basicService{
 		hooks: store,
 		queue: queue,
@@ -18,7 +19,7 @@ func NewBasicService(store gohookd.HookStore, queue gohookd.HookQueue) Service {
 
 type basicService struct {
 	hooks gohookd.HookStore
-	queue gohookd.HookQueue
+	queue tunnel.HookQueue
 }
 
 func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*TriggerResponse, error) {
@@ -31,7 +32,9 @@ func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*Trigg
 		return nil, err
 	}
 
-	err = s.queue.Broadcast(string(hook.Id))
+	err = s.queue.Broadcast(&tunnel.QueueMessage{
+		SessionId: string(hook.Id),
+	})
 	if err != nil {
 		return nil, err
 	}

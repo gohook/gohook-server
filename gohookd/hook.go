@@ -8,6 +8,7 @@ type Hook struct {
 	Id     HookID `json:"id"`
 	Url    string `json:"url"`
 	Method string `json:"method"`
+	UserId string `json:"user_id"`
 }
 
 type HookRequest struct {

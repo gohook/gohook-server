@@ -45,7 +45,6 @@ func main() {
 
 	// Setup Stores
 	hookStore := inmem.NewInMemHooks()
-	sessionStore := inmem.NewInMemSessions()
 
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
@@ -73,7 +72,7 @@ func main() {
 
 	var webhookService webhook.Service
 	{
-		webhookService = webhook.NewBasicService(hookStore, sessionStore, queue)
+		webhookService = webhook.NewBasicService(hookStore, queue)
 		webhookService = webhook.ServiceLoggingMiddleware(logger)(webhookService)
 	}
 
@@ -149,7 +148,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(sessionStore, queue, logger)
+			t, err := tunnel.MakeTunnelServer(queue, logger)
 			if err != nil {
 				errc <- err
 				return

@@ -19,8 +19,8 @@ type HookCall struct {
 }
 
 type QueueMessage struct {
-	SessionId SessionID
-	Hook      HookCall
+	UserId string
+	Hook   HookCall
 }
 
 type ReceiveC chan *QueueMessage

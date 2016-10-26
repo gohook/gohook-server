@@ -2,7 +2,6 @@ package tunnel
 
 import (
 	"github.com/go-kit/kit/log"
-	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/pb"
 	"github.com/satori/go.uuid"
 	"time"
@@ -24,7 +23,7 @@ type GohookTunnelServer struct {
 	logger log.Logger
 }
 
-func (s GohookTunnelServer) SendToStream(id SessionID, message gohookd.HookCall) error {
+func (s GohookTunnelServer) SendToStream(id SessionID, message HookCall) error {
 	if stream, ok := s.sessions[id]; ok {
 		err := stream.Send(&pb.TunnelResponse{
 			Event: &pb.TunnelResponse_Hook{

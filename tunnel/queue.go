@@ -1,9 +1,5 @@
 package tunnel
 
-import (
-	"github.com/gohook/gohook-server/gohookd"
-)
-
 /*
 Queue Interface
 ---------------
@@ -15,9 +11,16 @@ processes to know about incoming hook messages and
 allows the process with the connected client to handle
 sending the message down to the client.
 */
+
+type HookCall struct {
+	Id     string `json:"id"`
+	Method string `json:"method"`
+	Body   []byte `json:"body"`
+}
+
 type QueueMessage struct {
 	SessionId SessionID
-	Hook      gohookd.HookCall
+	Hook      HookCall
 }
 
 type ReceiveC chan *QueueMessage

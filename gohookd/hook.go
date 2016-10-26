@@ -10,12 +10,6 @@ type Hook struct {
 	Method string `json:"method"`
 }
 
-type HookCall struct {
-	Id     HookID `json:"id"`
-	Method string `json:"method"`
-	Body   []byte `json:"body"`
-}
-
 type HookRequest struct {
 	Method string `json:"method"`
 }

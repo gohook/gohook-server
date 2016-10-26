@@ -29,7 +29,7 @@ func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*Trigg
 	// If it does, check to see if there is a session associated with this user
 	// If there is, broadcast a struct containing the sessionid and the hook payload
 
-	_, err := s.hooks.Find(trigger.HookId)
+	hook, err := s.hooks.Find(trigger.HookId)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +43,11 @@ func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*Trigg
 	// Broadcast message with the sessionid and hook data
 	err = s.queue.Broadcast(&tunnel.QueueMessage{
 		SessionId: session.Id,
+		Hook: gohookd.HookCall{
+			Id:     hook.Id,
+			Method: trigger.Method,
+			Body:   trigger.Body,
+		},
 	})
 	if err != nil {
 		return nil, err

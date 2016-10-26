@@ -1,5 +1,9 @@
 package tunnel
 
+import (
+	"github.com/gohook/gohook-server/gohookd"
+)
+
 /*
 Queue Interface
 ---------------
@@ -13,6 +17,7 @@ sending the message down to the client.
 */
 type QueueMessage struct {
 	SessionId SessionID
+	Hook      gohookd.HookCall
 }
 
 type ReceiveC chan *QueueMessage

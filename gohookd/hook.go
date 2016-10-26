@@ -13,7 +13,7 @@ type Hook struct {
 type HookCall struct {
 	Id     HookID `json:"id"`
 	Method string `json:"method"`
-	Body   string `json:"body"`
+	Body   []byte `json:"body"`
 }
 
 type HookRequest struct {

@@ -39,11 +39,7 @@ func (s GohookTunnelServer) SendToStream(id SessionID, message *pb.HookCall) err
 
 // Tunnel transport handler
 func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_TunnelServer) error {
-	// TODO: Need to generate a unique ID for this session and link it to the user's ID
-
-	tickChan := time.NewTicker(time.Second * 5).C
 	streamCtx := stream.Context()
-
 	id := uuid.NewV4()
 	newSession := &Session{
 		Id:     SessionID(id.String()),
@@ -66,14 +62,6 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 			s.logger.Log("msg", "Stream done", "sessionId", newSession.Id, "err", err)
 			delete(s.sessions, newSession.Id)
 			return s.sessionStore.Remove(newSession.Id)
-		case <-tickChan:
-			// Case for testing. Use broadcast to trigger a message
-			err := s.queue.Broadcast(&QueueMessage{
-				SessionId: newSession.Id,
-			})
-			if err != nil {
-				s.logger.Log("msg", "Failed to broadcast", "error", err)
-			}
 		}
 
 	}

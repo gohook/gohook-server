@@ -12,7 +12,7 @@ allows the process with the connected client to handle
 sending the message down to the client.
 */
 type QueueMessage struct {
-	SessionId string
+	SessionId SessionID
 }
 
 type ReceiveC chan *QueueMessage

@@ -43,8 +43,9 @@ func main() {
 		gRPCPort = "9001"
 	}
 
-	// Setup Store
-	store := inmem.NewInMemHooks()
+	// Setup Stores
+	hookStore := inmem.NewInMemHooks()
+	sessionStore := inmem.NewInMemSessions()
 
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
@@ -66,13 +67,13 @@ func main() {
 	// Business domain.
 	var gohookdService gohookd.Service
 	{
-		gohookdService = gohookd.NewBasicService(store)
+		gohookdService = gohookd.NewBasicService(hookStore)
 		gohookdService = gohookd.ServiceLoggingMiddleware(logger)(gohookdService)
 	}
 
 	var webhookService webhook.Service
 	{
-		webhookService = webhook.NewBasicService(store, queue)
+		webhookService = webhook.NewBasicService(hookStore, sessionStore, queue)
 		webhookService = webhook.ServiceLoggingMiddleware(logger)(webhookService)
 	}
 
@@ -148,7 +149,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(queue, logger)
+			t, err := tunnel.MakeTunnelServer(sessionStore, queue, logger)
 			if err != nil {
 				errc <- err
 				return

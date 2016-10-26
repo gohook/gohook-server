@@ -13,8 +13,8 @@ type Session struct {
 }
 
 type SessionStore interface {
-	Add(sessionId Session) error
-	Remove(sessionId SessionID) (*Session, error)
+	Add(session *Session) error
+	Remove(sessionId SessionID) error
 	FindByUserId(userId string) (*Session, error)
 	FindBySessionId(sessionId SessionID) (*Session, error)
 }

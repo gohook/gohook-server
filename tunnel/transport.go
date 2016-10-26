@@ -2,16 +2,17 @@ package tunnel
 
 import (
 	"github.com/go-kit/kit/log"
-	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/pb"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
-type SessionID string
-
 type GohookTunnelServer struct {
 	// Queue for getting notified when hooks come in
-	queue gohookd.HookQueue
+	queue HookQueue
+
+	// Session Store for adding new sessions
+	sessionStore SessionStore
 
 	// Keeps a list of all the sessions and the session ids for sending to correct client
 	// NOTE: SessionID must be unique per instance, but trackable with the given user. Maybe
@@ -22,11 +23,14 @@ type GohookTunnelServer struct {
 	logger log.Logger
 }
 
-func (s GohookTunnelServer) SendToStream(id SessionID, message *pb.HookCall) error {
+func (s GohookTunnelServer) SendToStream(id SessionID, message HookCall) error {
 	if stream, ok := s.sessions[id]; ok {
 		err := stream.Send(&pb.TunnelResponse{
 			Event: &pb.TunnelResponse_Hook{
-				Hook: message,
+				Hook: &pb.HookCall{
+					Id:   string(message.Id),
+					Body: message.Body,
+				},
 			},
 		})
 		return err
@@ -38,42 +42,45 @@ func (s GohookTunnelServer) SendToStream(id SessionID, message *pb.HookCall) err
 
 // Tunnel transport handler
 func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_TunnelServer) error {
-	// TODO: Need to generate a unique ID for this session and link it to the user's ID
-
-	tickChan := time.NewTicker(time.Second * 5).C
 	streamCtx := stream.Context()
+	id := uuid.NewV4()
+	newSession := &Session{
+		Id:     SessionID(id.String()),
+		UserId: req.Id,
+		Start:  time.Now(),
+	}
 
-	s.logger.Log("msg", "Added stream to list", "streamId", req.Id)
-	s.sessions[SessionID(req.Id)] = stream
+	err := s.sessionStore.Add(newSession)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Log("msg", "Added stream to list", "streamId", newSession.Id, "userId", newSession.UserId)
+	s.sessions[newSession.Id] = stream
 
 	for {
 		select {
 		case <-streamCtx.Done():
 			err := streamCtx.Err()
-			s.logger.Log("msg", "Stream done", "err", err)
-			delete(s.sessions, SessionID(req.Id))
-			return nil
-		case <-tickChan:
-			// Case for testing. Use broadcast to trigger a message
-			err := s.queue.Broadcast("Hello")
-			if err != nil {
-				s.logger.Log("msg", "Failed to broadcast", "error", err)
-			}
+			s.logger.Log("msg", "Stream done", "sessionId", newSession.Id, "err", err)
+			delete(s.sessions, newSession.Id)
+			return s.sessionStore.Remove(newSession.Id)
 		}
 
 	}
 }
 
-func MakeTunnelServer(q gohookd.HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
+func MakeTunnelServer(sessions SessionStore, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
 	queuec, err := q.Listen()
 	if err != nil {
 		return nil, err
 	}
 
 	server := &GohookTunnelServer{
-		logger:   logger,
-		queue:    q,
-		sessions: make(map[SessionID]pb.Gohook_TunnelServer),
+		logger:       logger,
+		sessionStore: sessions,
+		queue:        q,
+		sessions:     make(map[SessionID]pb.Gohook_TunnelServer),
 	}
 
 	// Process for handling queue messages
@@ -89,9 +96,7 @@ func MakeTunnelServer(q gohookd.HookQueue, logger log.Logger) (*GohookTunnelServ
 				}
 
 				logger.Log("msg", "Handling incoming messsage...", "message", msg)
-				server.SendToStream("myid", &pb.HookCall{
-					Id: msg.(string),
-				})
+				server.SendToStream(msg.SessionId, msg.Hook)
 			}
 
 		}

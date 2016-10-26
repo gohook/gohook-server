@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,10 +17,12 @@ import (
 	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/gohook-server/pb"
 	"github.com/gohook/gohook-server/tunnel"
+	"github.com/gohook/gohook-server/webhook"
 )
 
 const (
-	port = "PORT"
+	port     = "PORT"
+	gRPCPort = "GRPC_PORT"
 )
 
 type GohookGRPCServer struct {
@@ -34,8 +37,15 @@ func main() {
 		port = "8080"
 	}
 
-	// Setup Store
-	store := inmem.NewInMemHooks()
+	gRPCPort := os.Getenv(gRPCPort)
+	// default for port
+	if gRPCPort == "" {
+		gRPCPort = "9001"
+	}
+
+	// Setup Stores
+	hookStore := inmem.NewInMemHooks()
+	sessionStore := inmem.NewInMemSessions()
 
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
@@ -55,38 +65,45 @@ func main() {
 	}
 
 	// Business domain.
-	var service gohookd.Service
+	var gohookdService gohookd.Service
 	{
-		service = gohookd.NewBasicService(store, queue)
-		service = gohookd.ServiceLoggingMiddleware(logger)(service)
+		gohookdService = gohookd.NewBasicService(hookStore)
+		gohookdService = gohookd.ServiceLoggingMiddleware(logger)(gohookdService)
+	}
+
+	var webhookService webhook.Service
+	{
+		webhookService = webhook.NewBasicService(hookStore, sessionStore, queue)
+		webhookService = webhook.ServiceLoggingMiddleware(logger)(webhookService)
 	}
 
 	// Endpoint domain.
 	var listEndpoint endpoint.Endpoint
 	{
 		listLogger := log.NewContext(logger).With("method", "List")
-		listEndpoint = gohookd.MakeListEndpoint(service)
+		listEndpoint = gohookd.MakeListEndpoint(gohookdService)
 		listEndpoint = gohookd.EndpointLoggingMiddleware(listLogger)(listEndpoint)
 	}
 
 	var createEndpoint endpoint.Endpoint
 	{
 		createLogger := log.NewContext(logger).With("method", "Create")
-		createEndpoint = gohookd.MakeCreateEndpoint(service)
+		createEndpoint = gohookd.MakeCreateEndpoint(gohookdService)
 		createEndpoint = gohookd.EndpointLoggingMiddleware(createLogger)(createEndpoint)
 	}
 
 	var deleteEndpoint endpoint.Endpoint
 	{
 		deleteLogger := log.NewContext(logger).With("method", "Delete")
-		deleteEndpoint = gohookd.MakeDeleteEndpoint(service)
+		deleteEndpoint = gohookd.MakeDeleteEndpoint(gohookdService)
 		deleteEndpoint = gohookd.EndpointLoggingMiddleware(deleteLogger)(deleteEndpoint)
 	}
 
-	endpoints := gohookd.Endpoints{
-		ListEndpoint:   listEndpoint,
-		CreateEndpoint: createEndpoint,
-		DeleteEndpoint: deleteEndpoint,
+	var triggerEndpoint endpoint.Endpoint
+	{
+		triggerLogger := log.NewContext(logger).With("method", "Trigger")
+		triggerEndpoint = webhook.MakeTriggerEndpoint(webhookService)
+		triggerEndpoint = webhook.EndpointLoggingMiddleware(triggerLogger)(triggerEndpoint)
 	}
 
 	// Interrupt handler
@@ -96,9 +113,24 @@ func main() {
 		errc <- fmt.Errorf("%s", <-c)
 	}()
 
+	// HTTP transport
+	go func() {
+		var webhooks http.Handler
+		{
+			endpoints := webhook.Endpoints{
+				TriggerEndpoint: triggerEndpoint,
+			}
+			logger := log.NewContext(logger).With("transport", "HTTP")
+			webhooks = webhook.MakeWebhookHTTPServer(ctx, endpoints, logger)
+		}
+
+		logger.Log("msg", "HTTP Server Started", "port", port)
+		errc <- http.ListenAndServe(":"+port, webhooks)
+	}()
+
 	// gRPC transport
 	go func() {
-		lis, err := net.Listen("tcp", ":"+port)
+		lis, err := net.Listen("tcp", ":"+gRPCPort)
 		if err != nil {
 			errc <- err
 			return
@@ -110,9 +142,14 @@ func main() {
 		// Mechanical domain.
 		var gohook pb.GohookServer
 		{
+			endpoints := gohookd.Endpoints{
+				ListEndpoint:   listEndpoint,
+				CreateEndpoint: createEndpoint,
+				DeleteEndpoint: deleteEndpoint,
+			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(queue, logger)
+			t, err := tunnel.MakeTunnelServer(sessionStore, queue, logger)
 			if err != nil {
 				errc <- err
 				return
@@ -126,7 +163,7 @@ func main() {
 
 		pb.RegisterGohookServer(s, gohook)
 
-		logger.Log("msg", "GRPC Server Started", "port", port)
+		logger.Log("msg", "GRPC Server Started", "port", gRPCPort)
 		errc <- s.Serve(lis)
 	}()
 

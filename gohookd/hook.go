@@ -5,10 +5,10 @@ type HookID string
 type HookList []*Hook
 
 type Hook struct {
-	Id     HookID `json:"id"`
-	Url    string `json:"url"`
-	Method string `json:"method"`
-	UserId string `json:"user_id"`
+	Id        HookID `json:"id"`
+	Url       string `json:"url"`
+	Method    string `json:"method"`
+	AccountId string `json:"account_id"`
 }
 
 type HookRequest struct {

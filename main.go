@@ -45,6 +45,7 @@ func main() {
 
 	// Setup Stores
 	hookStore := inmem.NewInMemHooks()
+	accountStore := inmem.NewInMemAccounts()
 
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
@@ -148,7 +149,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(queue, logger)
+			t, err := tunnel.MakeTunnelServer(accountStore, queue, logger)
 			if err != nil {
 				errc <- err
 				return

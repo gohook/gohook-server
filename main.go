@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/gohook/gohook-server/auth"
 	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/gohook-server/pb"
@@ -47,6 +48,9 @@ func main() {
 	hookStore := inmem.NewInMemHooks()
 	accountStore := inmem.NewInMemAccounts()
 
+	// Setup AuthService
+	authService := auth.NewAuthService(accountStore)
+
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
 
@@ -67,7 +71,7 @@ func main() {
 	// Business domain.
 	var gohookdService gohookd.Service
 	{
-		gohookdService = gohookd.NewBasicService(hookStore)
+		gohookdService = gohookd.NewBasicService(hookStore, authService)
 		gohookdService = gohookd.ServiceLoggingMiddleware(logger)(gohookdService)
 	}
 
@@ -82,6 +86,7 @@ func main() {
 	{
 		listLogger := log.NewContext(logger).With("method", "List")
 		listEndpoint = gohookd.MakeListEndpoint(gohookdService)
+		listEndpoint = gohookd.EndpointAuthMiddleware(listLogger, authService)(listEndpoint)
 		listEndpoint = gohookd.EndpointLoggingMiddleware(listLogger)(listEndpoint)
 	}
 
@@ -149,7 +154,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(accountStore, queue, logger)
+			t, err := tunnel.MakeTunnelServer(authService, accountStore, queue, logger)
 			if err != nil {
 				errc <- err
 				return

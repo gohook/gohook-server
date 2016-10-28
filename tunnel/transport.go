@@ -6,6 +6,7 @@ import (
 	"github.com/gohook/gohook-server/pb"
 	"github.com/gohook/gohook-server/user"
 	"github.com/satori/go.uuid"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	"time"
@@ -14,6 +15,9 @@ import (
 type GohookTunnelServer struct {
 	// User Accounts Store
 	accounts user.AccountStore
+
+	// Auth Service
+	auth user.AuthService
 
 	// Queue for getting notified when hooks come in
 	queue HookQueue
@@ -54,14 +58,12 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 		return err
 	}
 
-	s.logger.Log("msg", "Have auth token", "token", token)
-
-	account, err := s.accounts.FindByToken(token)
+	account, err := s.auth.AuthAccountFromToken(token)
 	if err != nil {
 		return err
 	}
 
-	s.logger.Log("msg", "Have user", "user_id", account.Id)
+	s.logger.Log("msg", "Have authed user", "account_id", account.Id, "account_token", account.Token)
 
 	id := uuid.NewV4()
 	newSession := &Session{
@@ -88,21 +90,21 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 	}
 }
 
-func getTokenFromContext(ctx context.Context) (user.AccountToken, error) {
+func getTokenFromContext(ctx context.Context) (string, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		return "", errors.New("Missing context data from stream")
 	}
 
 	mdToken, ok := md["token"]
-	if !ok {
+	if !ok && len(mdToken) > 0 {
 		return "", errors.New("Missing auth token in GRPC request")
 	}
 
-	return user.AccountToken(mdToken[0]), nil
+	return mdToken[0], nil
 }
 
-func MakeTunnelServer(accounts user.AccountStore, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
+func MakeTunnelServer(authService user.AuthService, accounts user.AccountStore, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
 	queuec, err := q.Listen()
 	if err != nil {
 		return nil, err
@@ -112,6 +114,7 @@ func MakeTunnelServer(accounts user.AccountStore, q HookQueue, logger log.Logger
 
 	server := &GohookTunnelServer{
 		accounts: accounts,
+		auth:     authService,
 		logger:   logger,
 		queue:    q,
 		sessions: sessions,

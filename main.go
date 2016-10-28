@@ -94,6 +94,7 @@ func main() {
 	{
 		createLogger := log.NewContext(logger).With("method", "Create")
 		createEndpoint = gohookd.MakeCreateEndpoint(gohookdService)
+		createEndpoint = gohookd.EndpointAuthMiddleware(createLogger, authService)(createEndpoint)
 		createEndpoint = gohookd.EndpointLoggingMiddleware(createLogger)(createEndpoint)
 	}
 
@@ -101,6 +102,7 @@ func main() {
 	{
 		deleteLogger := log.NewContext(logger).With("method", "Delete")
 		deleteEndpoint = gohookd.MakeDeleteEndpoint(gohookdService)
+		deleteEndpoint = gohookd.EndpointAuthMiddleware(deleteLogger, authService)(deleteEndpoint)
 		deleteEndpoint = gohookd.EndpointLoggingMiddleware(deleteLogger)(deleteEndpoint)
 	}
 

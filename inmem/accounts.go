@@ -18,6 +18,10 @@ func NewInMemAccounts() user.AccountStore {
 		Id:    user.AccountId("myid"),
 		Token: user.AccountToken("brianegizi"),
 	}
+	accounts["myid2"] = &user.Account{
+		Id:    user.AccountId("myid2"),
+		Token: user.AccountToken("abrianegizi"),
+	}
 	return &InMemAccounts{
 		accounts: accounts,
 	}

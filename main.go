@@ -156,7 +156,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(authService, accountStore, queue, logger)
+			t, err := tunnel.MakeTunnelServer(authService, queue, logger)
 			if err != nil {
 				errc <- err
 				return

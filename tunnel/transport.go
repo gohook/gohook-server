@@ -13,9 +13,6 @@ import (
 )
 
 type GohookTunnelServer struct {
-	// User Accounts Store
-	accounts user.AccountStore
-
 	// Auth Service
 	auth user.AuthService
 
@@ -104,7 +101,7 @@ func getTokenFromContext(ctx context.Context) (string, error) {
 	return mdToken[0], nil
 }
 
-func MakeTunnelServer(authService user.AuthService, accounts user.AccountStore, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
+func MakeTunnelServer(authService user.AuthService, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
 	queuec, err := q.Listen()
 	if err != nil {
 		return nil, err
@@ -113,7 +110,6 @@ func MakeTunnelServer(authService user.AuthService, accounts user.AccountStore, 
 	sessions := NewSessionStore()
 
 	server := &GohookTunnelServer{
-		accounts: accounts,
 		auth:     authService,
 		logger:   logger,
 		queue:    q,

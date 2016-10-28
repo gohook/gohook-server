@@ -67,7 +67,7 @@ func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_Tunn
 
 	id := uuid.NewV4()
 	newSession := &Session{
-		Id:        SessionID(id.String()),
+		Id:        SessionId(id.String()),
 		AccountId: account.Id,
 		Start:     time.Now(),
 		Stream:    stream,

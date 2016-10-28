@@ -9,10 +9,10 @@ import (
 	"github.com/gohook/gohook-server/user"
 )
 
-type SessionID string
+type SessionId string
 
 type Session struct {
-	Id        SessionID
+	Id        SessionId
 	AccountId user.AccountId
 	Start     time.Time
 	Stream    pb.Gohook_TunnelServer
@@ -40,7 +40,7 @@ func (s *SessionStore) Add(session *Session) error {
 	return nil
 }
 
-func (s *SessionStore) Remove(accountId user.AccountId, id SessionID) error {
+func (s *SessionStore) Remove(accountId user.AccountId, id SessionId) error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 	sessions, ok := s.sessions[accountId]
@@ -55,7 +55,7 @@ func (s *SessionStore) Remove(accountId user.AccountId, id SessionID) error {
 	return errors.New("Not Found")
 }
 
-func (s *SessionStore) FindBySessionId(id SessionID) (*Session, error) {
+func (s *SessionStore) FindBySessionId(id SessionId) (*Session, error) {
 	s.mtx.RLock()
 	defer s.mtx.RUnlock()
 	for _, sessions := range s.sessions {

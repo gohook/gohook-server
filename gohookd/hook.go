@@ -1,14 +1,18 @@
 package gohookd
 
+import (
+	"github.com/gohook/gohook-server/user"
+)
+
 type HookID string
 
 type HookList []*Hook
 
 type Hook struct {
-	Id     HookID `json:"id"`
-	Url    string `json:"url"`
-	Method string `json:"method"`
-	UserId string `json:"user_id"`
+	Id        HookID         `json:"id"`
+	Url       string         `json:"url"`
+	Method    string         `json:"method"`
+	AccountId user.AccountId `json:"account_id"`
 }
 
 type HookRequest struct {
@@ -21,4 +25,7 @@ type HookStore interface {
 	Remove(hookId HookID) (*Hook, error)
 	Find(hookId HookID) (*Hook, error)
 	FindAll() (HookList, error)
+
+	// Scope requests to a user
+	Scope(accountId user.AccountId) HookStore
 }

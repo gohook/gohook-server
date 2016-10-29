@@ -1,5 +1,9 @@
 package tunnel
 
+import (
+	"github.com/gohook/gohook-server/user"
+)
+
 /*
 Queue Interface
 ---------------
@@ -19,8 +23,8 @@ type HookCall struct {
 }
 
 type QueueMessage struct {
-	UserId string
-	Hook   HookCall
+	AccountId user.AccountId
+	Hook      HookCall
 }
 
 type ReceiveC chan *QueueMessage

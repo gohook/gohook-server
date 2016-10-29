@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/gohook/gohook-server/auth"
 	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/gohook-server/pb"
@@ -45,6 +46,10 @@ func main() {
 
 	// Setup Stores
 	hookStore := inmem.NewInMemHooks()
+	accountStore := inmem.NewInMemAccounts()
+
+	// Setup AuthService
+	authService := auth.NewAuthService(accountStore)
 
 	// Setup Queue
 	queue := inmem.NewInMemQueue()
@@ -66,7 +71,7 @@ func main() {
 	// Business domain.
 	var gohookdService gohookd.Service
 	{
-		gohookdService = gohookd.NewBasicService(hookStore)
+		gohookdService = gohookd.NewBasicService(hookStore, authService)
 		gohookdService = gohookd.ServiceLoggingMiddleware(logger)(gohookdService)
 	}
 
@@ -81,6 +86,7 @@ func main() {
 	{
 		listLogger := log.NewContext(logger).With("method", "List")
 		listEndpoint = gohookd.MakeListEndpoint(gohookdService)
+		listEndpoint = gohookd.EndpointAuthMiddleware(listLogger, authService)(listEndpoint)
 		listEndpoint = gohookd.EndpointLoggingMiddleware(listLogger)(listEndpoint)
 	}
 
@@ -88,6 +94,7 @@ func main() {
 	{
 		createLogger := log.NewContext(logger).With("method", "Create")
 		createEndpoint = gohookd.MakeCreateEndpoint(gohookdService)
+		createEndpoint = gohookd.EndpointAuthMiddleware(createLogger, authService)(createEndpoint)
 		createEndpoint = gohookd.EndpointLoggingMiddleware(createLogger)(createEndpoint)
 	}
 
@@ -95,6 +102,7 @@ func main() {
 	{
 		deleteLogger := log.NewContext(logger).With("method", "Delete")
 		deleteEndpoint = gohookd.MakeDeleteEndpoint(gohookdService)
+		deleteEndpoint = gohookd.EndpointAuthMiddleware(deleteLogger, authService)(deleteEndpoint)
 		deleteEndpoint = gohookd.EndpointLoggingMiddleware(deleteLogger)(deleteEndpoint)
 	}
 
@@ -148,7 +156,7 @@ func main() {
 			}
 			logger := log.NewContext(logger).With("transport", "gRPC")
 			g := gohookd.MakeGohookdServer(ctx, endpoints, logger)
-			t, err := tunnel.MakeTunnelServer(queue, logger)
+			t, err := tunnel.MakeTunnelServer(authService, queue, logger)
 			if err != nil {
 				errc <- err
 				return

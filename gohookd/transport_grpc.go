@@ -7,6 +7,7 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/gohook/gohook-server/pb"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 )
 
 type GohookdServer struct {
@@ -15,9 +16,17 @@ type GohookdServer struct {
 	delete grpctransport.Handler
 }
 
+func extractAuthToken(ctx context.Context, md *metadata.MD) context.Context {
+	if token, ok := (*md)["token"]; ok && len(token) > 0 {
+		return context.WithValue(ctx, "token", token[0])
+	}
+	return ctx
+}
+
 func MakeGohookdServer(ctx context.Context, endpoints Endpoints, logger log.Logger) *GohookdServer {
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorLogger(logger),
+		grpctransport.ServerBefore(extractAuthToken),
 	}
 	return &GohookdServer{
 		list: grpctransport.NewServer(

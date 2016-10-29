@@ -30,8 +30,7 @@ func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*Trigg
 
 	// Broadcast message with the userid and hook data
 	err = s.queue.Broadcast(&tunnel.QueueMessage{
-		UserId: "myid",
-		// UserId: hook.UserId,
+		AccountId: hook.AccountId,
 		Hook: tunnel.HookCall{
 			Id:     string(hook.Id),
 			Method: trigger.Method,

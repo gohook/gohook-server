@@ -5,10 +5,24 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
+	"github.com/gohook/gohook-server/user"
 	"golang.org/x/net/context"
 )
 
 type Middleware func(Service) Service
+
+func EndpointAuthMiddleware(logger log.Logger, auth user.AuthService) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			account, err := auth.AuthAccountFromToken(ctx.Value("token").(string))
+			if err != nil {
+				return nil, err
+			}
+			ctx = context.WithValue(ctx, "account", account)
+			return next(ctx, request)
+		}
+	}
+}
 
 func EndpointLoggingMiddleware(logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {

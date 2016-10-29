@@ -1,13 +1,21 @@
 package tunnel
 
 import (
+	"errors"
 	"github.com/go-kit/kit/log"
 	"github.com/gohook/gohook-server/pb"
+	"github.com/gohook/gohook-server/user"
 	"github.com/satori/go.uuid"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	"time"
 )
 
 type GohookTunnelServer struct {
+	// Auth Service
+	auth user.AuthService
+
 	// Queue for getting notified when hooks come in
 	queue HookQueue
 
@@ -18,8 +26,8 @@ type GohookTunnelServer struct {
 	logger log.Logger
 }
 
-func (s GohookTunnelServer) SendToStream(userId string, message HookCall) error {
-	sessions, err := s.sessions.FindByUserId(userId)
+func (s GohookTunnelServer) SendToStream(accountId user.AccountId, message HookCall) error {
+	sessions, err := s.sessions.FindByAccountId(accountId)
 	if err != nil {
 		return err
 	}
@@ -41,32 +49,59 @@ func (s GohookTunnelServer) SendToStream(userId string, message HookCall) error 
 // Tunnel transport handler
 func (s *GohookTunnelServer) Tunnel(req *pb.TunnelRequest, stream pb.Gohook_TunnelServer) error {
 	streamCtx := stream.Context()
-	id := uuid.NewV4()
-	newSession := &Session{
-		Id:     SessionID(id.String()),
-		UserId: req.Id,
-		Start:  time.Now(),
-		Stream: stream,
-	}
 
-	err := s.sessions.Add(newSession)
+	token, err := getTokenFromContext(streamCtx)
 	if err != nil {
 		return err
 	}
-	s.logger.Log("msg", "Added stream to list", "streamId", newSession.Id, "userId", newSession.UserId)
+
+	account, err := s.auth.AuthAccountFromToken(token)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Log("msg", "Have authed user", "account_id", account.Id, "account_token", account.Token)
+
+	id := uuid.NewV4()
+	newSession := &Session{
+		Id:        SessionId(id.String()),
+		AccountId: account.Id,
+		Start:     time.Now(),
+		Stream:    stream,
+	}
+
+	err = s.sessions.Add(newSession)
+	if err != nil {
+		return err
+	}
+	s.logger.Log("msg", "Added stream to list", "streamId", newSession.Id, "account_id", newSession.AccountId)
 
 	for {
 		select {
 		case <-streamCtx.Done():
 			err := streamCtx.Err()
 			s.logger.Log("msg", "Stream done", "sessionId", newSession.Id, "err", err)
-			return s.sessions.Remove(newSession.UserId, newSession.Id)
+			return s.sessions.Remove(newSession.AccountId, newSession.Id)
 		}
 
 	}
 }
 
-func MakeTunnelServer(q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
+func getTokenFromContext(ctx context.Context) (string, error) {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return "", errors.New("Missing context data from stream")
+	}
+
+	mdToken, ok := md["token"]
+	if !ok && len(mdToken) > 0 {
+		return "", errors.New("Missing auth token in GRPC request")
+	}
+
+	return mdToken[0], nil
+}
+
+func MakeTunnelServer(authService user.AuthService, q HookQueue, logger log.Logger) (*GohookTunnelServer, error) {
 	queuec, err := q.Listen()
 	if err != nil {
 		return nil, err
@@ -75,6 +110,7 @@ func MakeTunnelServer(q HookQueue, logger log.Logger) (*GohookTunnelServer, erro
 	sessions := NewSessionStore()
 
 	server := &GohookTunnelServer{
+		auth:     authService,
 		logger:   logger,
 		queue:    q,
 		sessions: sessions,
@@ -93,7 +129,7 @@ func MakeTunnelServer(q HookQueue, logger log.Logger) (*GohookTunnelServer, erro
 				}
 
 				logger.Log("msg", "Handling incoming messsage...", "message", msg)
-				server.SendToStream(msg.UserId, msg.Hook)
+				server.SendToStream(msg.AccountId, msg.Hook)
 			}
 
 		}

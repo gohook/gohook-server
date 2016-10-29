@@ -1,5 +1,5 @@
-hash: 92920dda44130245ffc76f070690bccaeeb9b0bb662d534fe9f9291162b9bd4c
-updated: 2016-10-25T10:27:38.067555078-04:00
+hash: 59e2dd75d88da308069858fe1036b75f6545f7172cbbbcd3c5b4534f47907031
+updated: 2016-10-28T22:09:55.091388475-04:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -59,4 +59,11 @@ imports:
   - naming
   - peer
   - transport
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
+  - internal/sasl
+  - internal/scram
 testImports: []

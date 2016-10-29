@@ -12,18 +12,21 @@ import (
 	"github.com/go-kit/kit/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"gopkg.in/mgo.v2"
 
 	"github.com/gohook/gohook-server/auth"
 	"github.com/gohook/gohook-server/gohookd"
 	"github.com/gohook/gohook-server/inmem"
+	"github.com/gohook/gohook-server/mongo"
 	"github.com/gohook/gohook-server/pb"
 	"github.com/gohook/gohook-server/tunnel"
 	"github.com/gohook/gohook-server/webhook"
 )
 
 const (
-	port     = "PORT"
-	gRPCPort = "GRPC_PORT"
+	port      = "PORT"
+	gRPCPort  = "GRPC_PORT"
+	mongoAddr = "MONGO_URL"
 )
 
 type GohookGRPCServer struct {
@@ -44,9 +47,26 @@ func main() {
 		gRPCPort = "9001"
 	}
 
+	mongoAddr := os.Getenv(mongoAddr)
+	// default for mongo
+	if mongoAddr == "" {
+		mongoAddr = "127.0.0.1"
+	}
+
 	// Setup Stores
-	hookStore := inmem.NewInMemHooks()
-	accountStore := inmem.NewInMemAccounts()
+	// Setup Mongo DB connection
+	session, err := mgo.Dial(mongoAddr)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	hookStore, err := mongo.NewMongoHookStore("gohook", session)
+	if err != nil {
+		panic(err)
+	}
+
+	accountStore := mongo.NewMongoAccountStore("gohook", session)
 
 	// Setup AuthService
 	authService := auth.NewAuthService(accountStore)

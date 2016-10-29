@@ -54,8 +54,6 @@ func main() {
 	}
 
 	// Setup Stores
-	accountStore := inmem.NewInMemAccounts()
-
 	// Setup Mongo DB connection
 	session, err := mgo.Dial(mongoAddr)
 	if err != nil {
@@ -67,6 +65,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	accountStore := mongo.NewMongoAccountStore("gohook", session)
 
 	// Setup AuthService
 	authService := auth.NewAuthService(accountStore)

@@ -7,5 +7,6 @@ ADD . /app
 WORKDIR /app
 
 EXPOSE 8080
+EXPOSE 9001
 
-CMD ["/app/bin/add"]
+CMD ["/app/bin/gohookd"]

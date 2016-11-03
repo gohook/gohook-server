@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
       - name: gohook-server
-        image: gcr.io/gohook-io/gohook-server:alpha-0.0.2
+        image: gcr.io/gohook-io/gohook-server:alpha-0.0.3
         env:
         - name: MONGO_URL
           value: mongo

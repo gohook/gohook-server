@@ -16,6 +16,8 @@ spec:
         env:
         - name: MONGO_URL
           value: mongo
+        - name: HTTP_ORIGIN
+          value: gohook.io
         ports:
         - containerPort: 8080
         - containerPort: 9001

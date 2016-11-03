@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gohook
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        version: alpha
+        tier: backend
+    spec:
+      containers:
+      - name: gohook-server
+        image: gcr.io/gohook-io/gohook-server:alpha-0.0.2
+        env:
+        - name: MONGO_URL
+          value: mongo
+        ports:
+        - containerPort: 8080
+        - containerPort: 9001

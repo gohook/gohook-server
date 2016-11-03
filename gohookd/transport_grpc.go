@@ -181,13 +181,13 @@ func DecodeGRPCCreateResponse(_ context.Context, response interface{}) (interfac
 
 // Delete transforms
 func EncodeGRPCDeleteRequest(_ context.Context, request interface{}) (interface{}, error) {
-	id := request.(string)
-	return &pb.DeleteRequest{id}, nil
+	id := request.(HookID)
+	return &pb.DeleteRequest{string(id)}, nil
 }
 
 func DecodeGRPCDeleteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.DeleteRequest)
-	return req.Id, nil
+	return HookID(req.Id), nil
 }
 
 func EncodeGRPCDeleteResponse(_ context.Context, response interface{}) (interface{}, error) {

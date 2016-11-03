@@ -111,21 +111,23 @@ func (d *MongoHookStore) FindAll() (gohookd.HookList, error) {
 }
 
 func (d *MongoHookStore) Remove(id gohookd.HookID) (*gohookd.Hook, error) {
+	hook, err := d.Find(id)
+	if err != nil {
+		return nil, err
+	}
+
 	sess := d.session.Copy()
 	defer sess.Close()
 
 	c := sess.DB(d.db).C(HookDoc)
 
-	q := bson.M{"id": id}
-
-	if d.scoped {
-		q = bson.M{"id": id, "accountid": d.accountId}
+	err = c.Remove(bson.M{"id": hook.Id})
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, errors.New("Not Found")
+		}
+		return nil, err
 	}
 
-	err := c.Remove(q)
-	if err == mgo.ErrNotFound {
-		return nil, errors.New("Not Found")
-	}
-
-	return nil, err
+	return hook, nil
 }

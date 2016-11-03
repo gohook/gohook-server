@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	port      = "PORT"
-	gRPCPort  = "GRPC_PORT"
-	mongoAddr = "MONGO_URL"
+	port             = "PORT"
+	gRPCPort         = "GRPC_PORT"
+	httpServerOrigin = "HTTP_ORIGIN"
+	mongoAddr        = "MONGO_URL"
 )
 
 type GohookGRPCServer struct {
@@ -45,6 +46,12 @@ func main() {
 	// default for port
 	if gRPCPort == "" {
 		gRPCPort = "9001"
+	}
+
+	httpServerOrigin := os.Getenv(httpServerOrigin)
+	// default for port
+	if httpServerOrigin == "" {
+		httpServerOrigin = "localhost:8080"
 	}
 
 	mongoAddr := os.Getenv(mongoAddr)
@@ -91,7 +98,7 @@ func main() {
 	// Business domain.
 	var gohookdService gohookd.Service
 	{
-		gohookdService = gohookd.NewBasicService(hookStore, authService)
+		gohookdService = gohookd.NewBasicService(hookStore, authService, gohookd.WithOrigin(httpServerOrigin))
 		gohookdService = gohookd.ServiceLoggingMiddleware(logger)(gohookdService)
 	}
 

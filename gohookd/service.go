@@ -14,16 +14,40 @@ type Service interface {
 	Delete(ctx context.Context, id HookID) (*Hook, error)
 }
 
-func NewBasicService(store HookStore, authService user.AuthService) Service {
+type ServiceOpts struct {
+	Origin   string
+	Protocol string
+	Route    string
+}
+
+var DefaultServiceOpts = ServiceOpts{
+	Protocol: "http",
+	Origin:   "localhost",
+	Route:    "hook",
+}
+
+func NewServiceOpts() *ServiceOpts {
+	return &DefaultServiceOpts
+}
+
+func WithOrigin(origin string) *ServiceOpts {
+	opts := &DefaultServiceOpts
+	opts.Origin = origin
+	return opts
+}
+
+func NewBasicService(store HookStore, authService user.AuthService, opts *ServiceOpts) Service {
 	return &basicService{
 		hooks: store,
 		auth:  authService,
+		opts:  opts,
 	}
 }
 
 type basicService struct {
 	hooks HookStore
 	auth  user.AuthService
+	opts  *ServiceOpts
 }
 
 func (s basicService) List(ctx context.Context) (HookList, error) {
@@ -40,7 +64,7 @@ func (s *basicService) Create(ctx context.Context, request HookRequest) (*Hook, 
 	id := uuid.NewV4()
 	newHook := &Hook{
 		Id:     HookID(id.String()),
-		Url:    fmt.Sprintf("http://localhost:8080/hook/%s", id.String()),
+		Url:    fmt.Sprintf("%s://%s/%s/%s", s.opts.Protocol, s.opts.Origin, s.opts.Route, id.String()),
 		Method: request.Method,
 	}
 	err := s.hooks.Scope(account.Id).Add(newHook)

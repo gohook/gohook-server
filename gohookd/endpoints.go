@@ -19,6 +19,9 @@ type listRequest struct{}
 
 func (e Endpoints) List(ctx context.Context) (HookList, error) {
 	response, err := e.ListEndpoint(ctx, listRequest{})
+	if err != nil {
+		return nil, err
+	}
 	return response.(HookList), err
 }
 

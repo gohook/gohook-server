@@ -19,6 +19,9 @@ type listRequest struct{}
 
 func (e Endpoints) List(ctx context.Context) (HookList, error) {
 	response, err := e.ListEndpoint(ctx, listRequest{})
+	if err != nil {
+		return nil, err
+	}
 	return response.(HookList), err
 }
 
@@ -36,7 +39,6 @@ func MakeListEndpoint(s Service) endpoint.Endpoint {
 func (e Endpoints) Create(ctx context.Context, request HookRequest) (*Hook, error) {
 	response, err := e.CreateEndpoint(ctx, request)
 	if err != nil {
-		fmt.Println("Create Error Endpoint: ", err)
 		return nil, err
 	}
 	return response.(*Hook), nil

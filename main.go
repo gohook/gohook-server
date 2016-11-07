@@ -16,9 +16,9 @@ import (
 
 	"github.com/gohook/gohook-server/auth"
 	"github.com/gohook/gohook-server/gohookd"
-	"github.com/gohook/gohook-server/inmem"
 	"github.com/gohook/gohook-server/mongo"
 	"github.com/gohook/gohook-server/pb"
+	"github.com/gohook/gohook-server/redis"
 	"github.com/gohook/gohook-server/tunnel"
 	"github.com/gohook/gohook-server/webhook"
 )
@@ -79,7 +79,10 @@ func main() {
 	authService := auth.NewAuthService(accountStore)
 
 	// Setup Queue
-	queue := inmem.NewInMemQueue()
+	queue, err := redis.NewRedisQueue(":6379")
+	if err != nil {
+		panic(err)
+	}
 
 	// Context
 	ctx := context.Background()

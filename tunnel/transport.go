@@ -128,7 +128,7 @@ func MakeTunnelServer(authService user.AuthService, q HookQueue, logger log.Logg
 					return
 				}
 
-				logger.Log("msg", "Handling incoming messsage...", "message", msg)
+				logger.Log("msg", "Handling incoming messsage...", "message", msg.Hook.Id)
 				server.SendToStream(msg.AccountId, msg.Hook)
 			}
 

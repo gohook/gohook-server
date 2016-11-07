@@ -23,3 +23,9 @@ import:
 - package: gopkg.in/mgo.v2
   subpackages:
   - bson
+- package: github.com/garyburd/redigo
+  version: v1.0.0
+  subpackages:
+  - redis
+- package: github.com/cenkalti/backoff
+  version: v1.0.0

@@ -125,7 +125,7 @@ func MakeTunnelServer(authService user.AuthService, q HookQueue, logger log.Logg
 			case msg := <-queuec:
 				if msg == nil {
 					logger.Log("msg", "Message Channel has closed. Exiting.")
-					continue
+					return
 				}
 
 				logger.Log("msg", "Handling incoming messsage...", "message", msg)

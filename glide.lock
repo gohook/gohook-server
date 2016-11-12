@@ -1,5 +1,5 @@
-hash: 59e2dd75d88da308069858fe1036b75f6545f7172cbbbcd3c5b4534f47907031
-updated: 2016-10-28T22:09:55.091388475-04:00
+hash: 158b8e4af58c8277044b10d35a9ecb23024fe7b000979a2fae42bab6c342d5a6
+updated: 2016-11-07T15:42:53.417932457-05:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -7,6 +7,13 @@ imports:
   - hystrix
   - hystrix/metric_collector
   - hystrix/rolling
+- name: github.com/cenkalti/backoff
+  version: 32cd0c5b3aef12c76ed64aaf678f6c79736be7dc
+- name: github.com/garyburd/redigo
+  version: 8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13
+  subpackages:
+  - internal
+  - redis
 - name: github.com/go-kit/kit
   version: 6fb874ce59bb45b2f60ee3d289829db02142ecc6
   subpackages:

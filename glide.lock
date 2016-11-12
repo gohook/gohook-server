@@ -1,5 +1,5 @@
-hash: 158b8e4af58c8277044b10d35a9ecb23024fe7b000979a2fae42bab6c342d5a6
-updated: 2016-11-07T15:42:53.417932457-05:00
+hash: 0dc127d3e83baf21653024a03a19eb81a80ea6fbc237131fdf13b8a40516f502
+updated: 2016-11-11T20:30:04.888105987-05:00
 imports:
 - name: github.com/afex/hystrix-go
   version: 39520ddd07a9d9a071d615f7476798659f5a3b89
@@ -36,14 +36,14 @@ imports:
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
-- name: github.com/satori/go.uuid
-  version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/sony/gobreaker
   version: 809bcd5a528f344e95c2368796c9225d128f9b3e
 - name: github.com/streadway/handy
   version: f450267a206e480d863d2a92846a40f6e2896b2a
   subpackages:
   - breaker
+- name: github.com/ventu-io/go-shortid
+  version: 6c56cef5189ca1b3d5ef01dc07f4d611dfc0bb33
 - name: golang.org/x/net
   version: 697293012c1df3836225e65b04b16871ac5bf0bf
   subpackages:

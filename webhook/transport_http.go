@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gohook/gohook-server/gohookd"
+	"github.com/gohook/gohook-server/user"
 	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 )
@@ -18,7 +19,7 @@ func MakeWebhookHTTPServer(ctx context.Context, endpoints Endpoints, logger log.
 		httptransport.ServerErrorLogger(logger),
 	}
 	m := mux.NewRouter()
-	m.Handle("/hook/{hookId}", httptransport.NewServer(
+	m.Handle("/{accountId}/{hookId}", httptransport.NewServer(
 		ctx,
 		endpoints.TriggerEndpoint,
 		DecodeHTTPTriggerRequest,
@@ -54,14 +55,16 @@ func errorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 
 func DecodeHTTPTriggerRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	hookId := mux.Vars(r)["hookId"]
+	accountId := mux.Vars(r)["accountId"]
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 	req := TriggerRequest{
-		HookId: gohookd.HookID(hookId),
-		Method: r.Method,
-		Body:   body,
+		AccountId: user.AccountId(accountId),
+		HookId:    gohookd.HookID(hookId),
+		Method:    r.Method,
+		Body:      body,
 	}
 	return req, nil
 }

@@ -17,13 +17,11 @@ type Service interface {
 type ServiceOpts struct {
 	Origin   string
 	Protocol string
-	Route    string
 }
 
 var DefaultServiceOpts = ServiceOpts{
 	Protocol: "http",
 	Origin:   "localhost",
-	Route:    "hook",
 }
 
 func NewServiceOpts() *ServiceOpts {
@@ -64,7 +62,7 @@ func (s *basicService) Create(ctx context.Context, request HookRequest) (*Hook, 
 	id := uuid.NewV4()
 	newHook := &Hook{
 		Id:     HookID(id.String()),
-		Url:    fmt.Sprintf("%s://%s/%s/%s", s.opts.Protocol, s.opts.Origin, s.opts.Route, id.String()),
+		Url:    fmt.Sprintf("%s://%s/%s/%s", s.opts.Protocol, s.opts.Origin, account.Id, id.String()),
 		Method: request.Method,
 	}
 	err := s.hooks.Scope(account.Id).Add(newHook)

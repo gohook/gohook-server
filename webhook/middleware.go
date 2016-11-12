@@ -41,6 +41,7 @@ func (mw serviceLoggingMiddleware) Trigger(ctx context.Context, trigger TriggerR
 		mw.logger.Log(
 			"method", "Trigger",
 			"layer", "service",
+			"accountId", trigger.AccountId,
 			"hookId", trigger.HookId,
 			"error", err,
 			"took", time.Since(begin),

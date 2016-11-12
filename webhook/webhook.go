@@ -2,12 +2,14 @@ package webhook
 
 import (
 	"github.com/gohook/gohook-server/gohookd"
+	"github.com/gohook/gohook-server/user"
 )
 
 type TriggerRequest struct {
-	HookId gohookd.HookID
-	Method string
-	Body   []byte
+	AccountId user.AccountId
+	HookId    gohookd.HookID
+	Method    string
+	Body      []byte
 }
 
 type TriggerResponse struct {

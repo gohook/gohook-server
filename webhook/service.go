@@ -23,7 +23,7 @@ type basicService struct {
 }
 
 func (s basicService) Trigger(_ context.Context, trigger TriggerRequest) (*TriggerResponse, error) {
-	hook, err := s.hooks.Find(trigger.HookId)
+	hook, err := s.hooks.Scope(trigger.AccountId).Find(trigger.HookId)
 	if err != nil {
 		return nil, err
 	}

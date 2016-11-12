@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -13,20 +14,21 @@ import (
 	"golang.org/x/net/context"
 )
 
-func MakeWebhookHTTPServer(ctx context.Context, endpoints Endpoints, logger log.Logger) http.Handler {
+func MakeWebhookHTTPServer(ctx context.Context, endpoints Endpoints, logger log.Logger, origin string) http.Handler {
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorEncoder(errorEncoder),
 		httptransport.ServerErrorLogger(logger),
 	}
 	m := mux.NewRouter()
-	m.Handle("/{accountId}/{hookId}", httptransport.NewServer(
+	transportHandleFunc := httptransport.NewServer(
 		ctx,
 		endpoints.TriggerEndpoint,
 		DecodeHTTPTriggerRequest,
 		EncodeHTTPTriggerResponse,
 		options...,
-	))
-
+	)
+	m.Handle("/{accountId}/{hookId}", transportHandleFunc)
+	m.Handle("/{hookId}", transportHandleFunc).Host(fmt.Sprintf("{accountId}.%s", origin))
 	return m
 }
 

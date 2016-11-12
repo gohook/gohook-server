@@ -158,7 +158,7 @@ func main() {
 				TriggerEndpoint: triggerEndpoint,
 			}
 			logger := log.NewContext(logger).With("transport", "HTTP")
-			webhooks = webhook.MakeWebhookHTTPServer(ctx, endpoints, logger)
+			webhooks = webhook.MakeWebhookHTTPServer(ctx, endpoints, logger, httpServerOrigin)
 		}
 
 		logger.Log("msg", "HTTP Server Started", "port", port)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gohook/gohook-server/user"
-	"github.com/satori/go.uuid"
+	"github.com/ventu-io/go-shortid"
 	"golang.org/x/net/context"
 )
 
@@ -59,13 +59,20 @@ func (s basicService) List(ctx context.Context) (HookList, error) {
 
 func (s *basicService) Create(ctx context.Context, request HookRequest) (*Hook, error) {
 	account := ctx.Value("account").(*user.Account)
-	id := uuid.NewV4()
+	sid, err := shortid.New(1, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_+", 53646)
+	if err != nil {
+		return nil, err
+	}
+	id, err := sid.Generate()
+	if err != nil {
+		return nil, err
+	}
 	newHook := &Hook{
-		Id:     HookID(id.String()),
-		Url:    fmt.Sprintf("%s://%s/%s/%s", s.opts.Protocol, s.opts.Origin, account.Id, id.String()),
+		Id:     HookID(id),
+		Url:    fmt.Sprintf("%s://%s/%s/%s", s.opts.Protocol, s.opts.Origin, account.Id, id),
 		Method: request.Method,
 	}
-	err := s.hooks.Scope(account.Id).Add(newHook)
+	err = s.hooks.Scope(account.Id).Add(newHook)
 	if err != nil {
 		return nil, err
 	}

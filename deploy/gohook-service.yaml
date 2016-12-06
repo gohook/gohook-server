@@ -12,5 +12,4 @@ spec:
     protocol: TCP
     name: grpc
   selector:
-    version: alpha
     tier: backend

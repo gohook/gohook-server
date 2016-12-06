@@ -7,12 +7,11 @@ spec:
   template:
     metadata:
       labels:
-        version: alpha
         tier: backend
     spec:
       containers:
       - name: gohook-server
-        image: gcr.io/gohook-io/gohook-server:alpha-0.0.3
+        image: gcr.io/gohook-io/gohook-server:1.0.0
         env:
         - name: MONGO_URL
           value: mongo

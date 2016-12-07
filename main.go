@@ -28,6 +28,7 @@ const (
 	gRPCPort         = "GRPC_PORT"
 	httpServerOrigin = "HTTP_ORIGIN"
 	mongoAddr        = "MONGO_URL"
+	redisAddr        = "REDIS_ADDR"
 )
 
 type GohookGRPCServer struct {
@@ -60,6 +61,12 @@ func main() {
 		mongoAddr = "127.0.0.1"
 	}
 
+	redisAddr := os.Getenv(redisAddr)
+	// default for mongo
+	if redisAddr == "" {
+		redisAddr = ":6379"
+	}
+
 	// Setup Stores
 	// Setup Mongo DB connection
 	session, err := mgo.Dial(mongoAddr)
@@ -79,7 +86,7 @@ func main() {
 	authService := auth.NewAuthService(accountStore)
 
 	// Setup Queue
-	queue, err := redis.NewRedisQueue(":6379")
+	queue, err := redis.NewRedisQueue(redisAddr)
 	if err != nil {
 		panic(err)
 	}

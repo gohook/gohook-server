@@ -18,10 +18,6 @@ type RedisQueue struct {
 }
 
 func NewRedisQueue(address string) (tunnel.HookQueue, error) {
-	if address == "" {
-		address = ":6379"
-	}
-
 	q := &RedisQueue{
 		pool:     newPool(address),
 		receivec: make(tunnel.ReceiveC),
